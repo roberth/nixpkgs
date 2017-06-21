@@ -8289,6 +8289,8 @@ with pkgs;
   };
   libkrb5 = krb5Full.override { type = "lib"; };
 
+  languageMachines = import ../development/libraries/languagemachines/packages.nix { inherit callPackage; };
+
   lasso = callPackage ../development/libraries/lasso { };
 
   LASzip = callPackage ../development/libraries/LASzip { };
