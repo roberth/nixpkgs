@@ -19512,6 +19512,49 @@ with pkgs;
 
   nixopsUnstable = lowPrio (callPackage ../tools/package-management/nixops/unstable.nix { });
 
+  /*
+   * Evaluate a NixOS configuration using this evaluation of NixPkgs.
+   *
+   * With this function you can write, for example, a package that
+   * depends on a custom virtual machine image.
+   *
+   * For the meaning of NixOS terminology like config, options and
+   * imports, see
+   * https://nixos.org/nixos/manual/index.html#sec-writing-modules
+   *
+   * Required parameters:
+   *
+   *   modules:   A list of modules that represent the configuration
+   *              of the NixOS system to be constructed. This works
+   *              like the imports attribute in NixOS modules.
+   *
+   * Optional parameters:
+   *
+   *   system:    The system architecture to use for the NixOS system.
+   *              Default: the system attribute that is already present
+   *                       in this evaluation of NixPkgs.
+   *
+   * The result is an attribute set containing:
+   *
+   *   config:    The option values resulting from evaluating the modules
+   *              modules. This contains the various outputs of the
+   *              configuration, from configuration file
+   *              details to system-spanning packages like
+   *              config.system.build.toplevel.
+   *
+   *   options:   The option declarations.
+   *
+   *   pkgs:      The NixPkgs that the system was configured to use.
+   *              This will be the NixPkgs evaluation you were using to
+   *              call this function, unless you have included a module
+   *              that overrides NixPkgs.
+   */
+  nixosEvaluate = { modules, system ? super.system }:
+    import (pkgs.path + "/nixos/lib/eval-config.nix") {
+      inherit modules system;
+      pkgs = self;
+    };
+
   nixui = callPackage ../tools/package-management/nixui { node_webkit = nwjs_0_12; };
 
   nix-bundle = callPackage ../tools/package-management/nix-bundle { nix = nixUnstable; };
