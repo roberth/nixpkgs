@@ -6,7 +6,7 @@ let
   cfg = config.services.cassandra;
   defaultUser = "cassandra";
   cassandraConfig = flip recursiveUpdate cfg.extraConfig
-    { commitlog_sync = "batch";
+    ({ commitlog_sync = "batch";
       commitlog_sync_batch_window_in_ms = 2;
       partitioner = "org.apache.cassandra.dht.Murmur3Partitioner";
       endpoint_snitch = "SimpleSnitch";
@@ -14,11 +14,13 @@ let
         [{ class_name = "org.apache.cassandra.locator.SimpleSeedProvider";
            parameters = [ { seeds = "127.0.0.1"; } ];
         }];
-      hints_directory = "${cfg.homeDir}/hints";
       data_file_directories = [ "${cfg.homeDir}/data" ];
       commitlog_directory = "${cfg.homeDir}/commitlog";
       saved_caches_directory = "${cfg.homeDir}/saved_caches";
-    };
+    } // (if builtins.compareVersions cfg.package.version "3" >= 0
+          then { hints_directory = "${cfg.homeDir}/hints"; }
+          else {})
+    );
   cassandraConfigWithAddresses = cassandraConfig //
     ( if isNull cfg.listenAddress
         then { listen_interface = cfg.listenInterface; }

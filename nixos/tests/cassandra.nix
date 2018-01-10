@@ -15,9 +15,10 @@ let
         };
     };
   nodeCfg = extra: {pkgs, config, ...}:
-    { environment.systemPackages = [ pkgs.cassandra ];
+    { environment.systemPackages = [ config.services.cassandra.package ];
       networking.firewall.enable = false;
       services.cassandra = cassandraCfg // extra;
+      virtualisation.memorySize = 1024;
     };
 in
 {
@@ -41,7 +42,7 @@ in
     };
     subtest "nodetool is operational", sub {
       $cass0->waitForUnit("cassandra.service");
-      $cass0->waitUntilSucceeds("nc -z cass0 7199");
+      $cass0->waitUntilSucceeds("nc -z localhost 7199");
       $cass0->succeed("nodetool info");
       $cass0->succeed("nodetool status --resolve-ip | egrep '^UN[[:space:]]+cass0'");
     };
