@@ -159,7 +159,12 @@ in {
     enableShared = false;
   };
   mkl = super.mkl.override { enableStatic = true; };
-  nix = super.nix.override { withAWS = false; };
+  nix = (super.nix.override { withAWS = false; }).overrideAttrs (o: {
+    NIX_LDFLAGS = "-lssl -lbrotlicommon -lssh2 -lz -lnghttp2 -lcrypto ${o.NIX_LDFLAGS or ""}";
+    patches = (o.patches or []) ++ [
+      ../tools/package-management/nix/static.patch
+    ];
+  });
   openssl = (super.openssl_1_1.override { static = true; }).overrideAttrs (o: {
     # OpenSSL doesn't like the `--enable-static` / `--disable-shared` flags.
     configureFlags = (removeUnknownConfigureFlags o.configureFlags);
