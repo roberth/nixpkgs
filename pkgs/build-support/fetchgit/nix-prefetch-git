@@ -55,6 +55,7 @@ Options:
 
 # some git commands print to stdout, which would contaminate our JSON output
 clean_git(){
+    echo git "$@" >&2
     git "$@" >&2
 }
 
@@ -68,6 +69,7 @@ for arg; do
             --rev) argfun=set_rev;;
             --hash) argfun=set_hashType;;
             --branch-name) argfun=set_branchName;;
+            --merge) argfun=add_merge; deepClone=true ;;
             --deepClone) deepClone=true;;
             --quiet) QUIET=true;;
             --no-deepClone) deepClone=;;
@@ -91,6 +93,9 @@ for arg; do
                 var=${argfun#set_}
                 eval $var=$arg
                 ;;
+            add_*)
+                var=${argfun#add_}
+                eval "$var+=($arg)"
         esac
         argfun=""
     fi
@@ -169,7 +174,7 @@ checkout_ref(){
 
     if test -n "$ref"; then
         # --depth option is ignored on http repository.
-        clean_git fetch ${builder:+--progress} --depth 1 origin +"$ref" || return 1
+        clean_git fetch ${builder:+--progress} origin +"$ref" || return 1
         clean_git checkout -b "$branchName" FETCH_HEAD || return 1
     else
         return 1
@@ -301,6 +306,26 @@ clone_user_rev() {
     humanReadableRev=$(git describe "$fullRev" 2> /dev/null || git describe --tags "$fullRev" 2> /dev/null || echo -- none --)
     commitDate=$(git show -1 --no-patch --pretty=%ci "$fullRev")
     commitDateStrict8601=$(git show -1 --no-patch --pretty=%cI "$fullRev")
+    popd >/dev/null
+
+    # Merge as requested
+    pushd "$dir" >/dev/null
+    for merge in $merges; do
+      clean_git config user.email "fetchgit@example.com"
+      clean_git config user.name "fetchgit"
+      case "$merge" in
+        \#[0-9]*)
+          id=${merge#\#}
+          clean_git fetch ${builder:+--progress} origin "pull/$id/head:__pull_$id"
+          clean_git merge "__pull_$id"
+        ;;
+        *)
+          clean_git merge "$merge"
+        ;;
+      esac
+      clean_git commit --amend --date '1970-01-01 00:00:01 +0000' --no-edit
+      clean_git show --format=raw
+    done
     popd >/dev/null
 
     # Allow doing additional processing before .git removal
