@@ -18,6 +18,10 @@
 , vala
 , gobject-introspection
 , nixosTests
+  # Compile with significantly fewer dependencies, for use in
+  # server applications, build/doc tooling, cli apps, etc.
+  # This includes imagemagick and sphinx, which have a large reverse closure.
+, minimal ? false
 }:
 
 stdenv.mkDerivation rec {
@@ -35,7 +39,9 @@ stdenv.mkDerivation rec {
     pkg-config
     rustc
     cargo
+  ] ++ lib.optionals (!minimal && !stdenv.isDarwin) [
     vala
+  ] ++ lib.optionals (!minimal) [
     gobject-introspection
   ] ++ lib.optionals stdenv.isDarwin [
     ApplicationServices
@@ -58,8 +64,8 @@ stdenv.mkDerivation rec {
   ];
 
   configureFlags = [
-    "--enable-introspection"
-  ] ++ lib.optionals (!stdenv.isDarwin) [
+    (lib.enableFeature (!minimal) "introspection")
+  ] ++ lib.optionals (!stdenv.isDarwin && !minimal) [
     # Vapi does not build on MacOS.
     # https://github.com/NixOS/nixpkgs/pull/117081#issuecomment-827782004
     "--enable-vala"

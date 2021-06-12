@@ -15338,6 +15338,8 @@ in
 
   cairo = callPackage ../development/libraries/cairo { };
 
+  cairo_minimal = callPackage ../development/libraries/cairo { x11Support = false; };
+
   cairomm = callPackage ../development/libraries/cairomm { };
 
   cairomm_1_16 = callPackage ../development/libraries/cairomm/1.16.nix {
@@ -15346,6 +15348,10 @@ in
 
   pango = callPackage ../development/libraries/pango {
     harfbuzz = harfbuzz.override { withCoreText = stdenv.isDarwin; };
+  };
+  pango_minimal = pango.override {
+    cairo = pkgs.cairo_minimal;
+    x11Support = false;
   };
 
   pangolin = callPackage ../development/libraries/pangolin {
@@ -15472,6 +15478,12 @@ in
 
   harfbuzz = callPackage ../development/libraries/harfbuzz {
     inherit (darwin.apple_sdk.frameworks) ApplicationServices CoreText;
+  };
+
+  harfbuzz_minimal = pkgs.harfbuzz.override {
+    # cairo isn't used in the library
+    # cairo = pkgs.cairo_minimal;
+    cairo = null;
   };
 
   harfbuzzFull = harfbuzz.override {
@@ -16725,6 +16737,13 @@ in
   librsvg = callPackage ../development/libraries/librsvg {
     inherit (darwin) libobjc;
     inherit (darwin.apple_sdk.frameworks) ApplicationServices Foundation;
+  };
+  librsvg_minimal = callPackage ../development/libraries/librsvg {
+    inherit (darwin) libobjc;
+    inherit (darwin.apple_sdk.frameworks) ApplicationServices Foundation;
+    minimal = true;
+    cairo = pkgs.cairo_minimal;
+    pango = pkgs.pango_minimal;
   };
 
   librsync = callPackage ../development/libraries/librsync { };
@@ -23199,7 +23218,9 @@ in
 
   dit = callPackage ../applications/editors/dit { };
 
-  djvulibre = callPackage ../applications/misc/djvulibre { };
+  djvulibre = callPackage ../applications/misc/djvulibre {
+    librsvg = pkgs.librsvg_minimal;
+  };
 
   djvu2pdf = callPackage ../tools/typesetting/djvu2pdf { };
 
@@ -24580,6 +24601,7 @@ in
 
   imagemagickBig = lowPrio (callPackage ../applications/graphics/ImageMagick/7.0.nix {
     inherit (darwin.apple_sdk.frameworks) ApplicationServices Foundation;
+    librsvg = pkgs.librsvg_minimal;
   });
 
   inherit (nodePackages) imapnotify;

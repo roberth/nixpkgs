@@ -4,6 +4,7 @@
 , ApplicationServices
 , Foundation
 , testVersion, imagemagick
+, x11Support ? !stdenv.hostPlatform.isMinGW
 }:
 
 let
@@ -59,7 +60,7 @@ stdenv.mkDerivation rec {
 
   propagatedBuildInputs =
     [ bzip2 freetype libjpeg lcms2 ]
-    ++ lib.optionals (!stdenv.hostPlatform.isMinGW)
+    ++ lib.optionals x11Support
       [ libX11 libXext libXt libwebp ]
     ;
 
