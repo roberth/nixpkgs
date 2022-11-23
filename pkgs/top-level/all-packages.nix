@@ -16073,6 +16073,7 @@ with pkgs;
 
   supercollider = libsForQt5.callPackage ../development/interpreters/supercollider {
     fftw = fftwSinglePrec;
+    inherit (darwin.apple_sdk.frameworks) QuartzCore;
   };
 
   supercollider_scel = supercollider.override { useSCEL = true; };

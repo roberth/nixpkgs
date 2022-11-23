@@ -1,7 +1,12 @@
 { lib, stdenv, mkDerivation, fetchurl, fetchpatch, cmake
 , pkg-config, alsa-lib, libjack2, libsndfile, fftw
-, curl, gcc, libXt, qtbase, qttools, qtwebengine
-, readline, qtwebsockets, useSCEL ? false, emacs
+, curl, gcc, libXt, qtbase, qttools, qtwebengine, qtmacextras
+, readline, qtwebsockets
+, useSCEL ? false
+  # qtwebengine does not currently build on darwin
+, useQtWebEngine ? !stdenv.isDarwin
+, QuartzCore
+, emacs
 , supercollider-with-plugins, supercolliderPlugins
 , writeText, runCommand
 }:
@@ -28,8 +33,10 @@ mkDerivation rec {
 
   nativeBuildInputs = [ cmake pkg-config qttools ];
 
-  buildInputs = [ gcc libjack2 libsndfile fftw curl libXt qtbase qtwebengine qtwebsockets readline ]
+  buildInputs = [ gcc libjack2 libsndfile fftw curl libXt qtbase qtwebsockets readline qtmacextras ]
     ++ lib.optional (!stdenv.isDarwin) alsa-lib
+    ++ lib.optional useQtWebEngine qtwebengine
+    ++ lib.optionals stdenv.isDarwin [ QuartzCore ]
     ++ lib.optional useSCEL emacs;
 
   hardeningDisable = [ "stackprotector" ];
@@ -37,6 +44,10 @@ mkDerivation rec {
   cmakeFlags = [
     "-DSC_WII=OFF"
     "-DSC_EL=${if useSCEL then "ON" else "OFF"}"
+    "-DSC_USE_QTWEBENGINE=${if useQtWebEngine then "ON" else "OFF"}"
+    # "-DSC_IDE=OFF"
+    # "-DSC_QT=OFF"
+    # "-DX11=OFF" #??
   ];
 
   passthru.tests = {
