@@ -194,6 +194,16 @@ in lib.makeExtensible (self: ({
     self_attribute_name = "git";
   };
 
+  git_meson = callPackage ./granular/default.nix rec {
+    src = fetchFromGitHub {
+      owner = "NixOS";
+      repo = "nix";
+      rev = "896eb7a44b0a3a6345ae0bb214db4021fa0c078c";
+      hash = "sha256-HN/1a58B1UHzs5aLiTGwtMElM/H0O3BT3orW24P0EBs=";
+    };
+    version = "2.24.0pre-${lib.substring 0 8 src.rev}";
+  };
+
   latest = self.nix_2_23;
 
   # The minimum Nix version supported by Nixpkgs
