@@ -629,6 +629,7 @@ extendDerivation
 
      inherit passthru overrideAttrs;
      inherit meta;
+     devShell = stdenv.buildShellEnv { drvAttrs = derivationArg; };
    } //
    # Pass through extra attributes that are not inputs, but
    # should be made available to Nix expressions using the

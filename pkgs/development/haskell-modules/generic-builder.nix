@@ -2,6 +2,7 @@
 , jailbreak-cabal, hscolour, cpphs
 , ghcWithHoogle, ghcWithPackages
 , nodejs
+, devShellTools
 }:
 
 let
@@ -813,6 +814,9 @@ stdenv.mkDerivation ({
       };
 
     env = envFunc { };
+
+    # Specialise the devShell attribute, so we get our improved shell.
+    devShell = env.devShell;
 
   };
 

@@ -1,7 +1,11 @@
 {
+  bash,
+  coreutils,
   devShellTools,
   emptyFile,
+  gnugrep,
   lib,
+  runCommand,
   stdenv,
   hello,
   writeText,
@@ -172,4 +176,50 @@ lib.recurseIntoAttrs {
       # This would break the derivation. Instead, we have a check in the derivation to make sure Nix doesn't set it.
       "args"
     ]);
+
+  buildHelloInShell = derivation {
+    inherit (stdenv.buildPlatform) system;
+    name = "buildHelloInShell";
+    builder = "${bash}/bin/bash";
+    PATH = lib.makeBinPath [ coreutils gnugrep ];
+    args = [
+      "-euo" "pipefail" "-c"
+      ''
+        ${lib.getExe hello.devShell} -c 'genericBuild && ln -s $out "'"$PWD"'/result"'
+        ls -al
+        ./result/bin/hello | grep -i 'hello, world'
+        (set -x; [[ ! -e $out ]])
+        touch $out
+      ''
+    ];
+  };
+
+  various = let
+    hello2 = hello.overrideAttrs (o: {
+      shellHook = ''
+        echo 'shellHook says hi :)'
+      '';
+    });
+    inherit (hello2) devShell;
+  in derivation {
+    inherit (stdenv.buildPlatform) system;
+    name = "various";
+    builder = "${bash}/bin/bash";
+    PATH = lib.makeBinPath [ coreutils gnugrep ];
+    args = [
+      "-euo" "pipefail" "-c"
+      ''
+        ${lib.getExe devShell} -c 'echo "hello, world"' \
+          | grep -F 'hello, world'
+        ${lib.getExe devShell} -c 'echo "hello, world"' \
+          | grep -F 'hello, world'
+
+        ls -al
+        (set -x; [[ ! -e $out ]])
+        touch $out
+      ''
+    ];
+  };
+
+
 }

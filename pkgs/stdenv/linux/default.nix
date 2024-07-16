@@ -155,7 +155,7 @@ let
   # the bootstrap.  In all stages, we build an stdenv and the package
   # set that can be built with that stdenv.
   stageFun = prevStage:
-    { name, overrides ? (self: super: {}), extraNativeBuildInputs ? [] }:
+    { name, overrides ? (self: super: {}), extraNativeBuildInputs ? [], callPackage ? null }:
 
     let
 
@@ -205,6 +205,7 @@ let
         });
 
         overrides = self: super: (overrides self super) // { fetchurl = thisStdenv.fetchurlBoot; };
+        inherit callPackage;
       };
 
     in {

@@ -141,7 +141,7 @@ let
     pkgs = self.pkgsHostTarget;
     targetPackages = self.pkgsTargetTarget;
 
-    inherit stdenv;
+    stdenv = stdenv.override (o: { callPackage = self.callPackage; });
   };
 
   splice = self: super: import ./splice.nix lib self (adjacentPackages != null);
