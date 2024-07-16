@@ -33,6 +33,8 @@ let
     ''
       #!${pkgs.runtimeShell}
 
+      source ${./lib.sh}
+
       systemConfig='@out@'
 
       export PATH=/empty
