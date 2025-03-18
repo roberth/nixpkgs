@@ -190,6 +190,11 @@ rec {
       # definition values and locations (e.g. [ { file = "/foo.nix";
       # value = 1; } { file = "/bar.nix"; value = 2 } ]).
       merge ? mergeDefaultOption
+
+    , #
+      # This field does not have a default implementation, so that users' changes
+      # to `check` and `merge` are propagated.
+      checkAndMerge ? null
     , # Whether this type has a value representing nothingness. If it does,
       # this should be a value of the form { value = <the nothing value>; }
       # If it doesn't, this should be {}
@@ -227,7 +232,7 @@ rec {
     { _type = "option-type";
       inherit
         name check merge emptyValue getSubOptions getSubModules substSubModules
-        typeMerge deprecationMessage nestedTypes descriptionClass;
+        typeMerge deprecationMessage nestedTypes descriptionClass checkAndMerge;
       functor =
         if functor ? wrappedDeprecationMessage then
           functor // {
@@ -718,6 +723,26 @@ rec {
           # Push down position info.
           (pushPositions defs)))
       );
+      checkAndMerge = # TODO add check calls for defs
+        loc: defs:
+        let
+          evals =
+            filterAttrs
+              (n: v: v.optionalValue ? value)
+              (zipAttrsWith
+                (name: defs:
+                (mergeDefinitions (loc ++ [name]) elemType (defs))
+                )
+                # Push down position info.
+                (pushPositions defs)
+              );
+        in
+        {
+          value =
+            mapAttrs (n: v: v.optionalValue.value) evals;
+          outOfBand.attrs = mapAttrs (n: v: v.checkedAndMerged.outOfBand) evals;
+        };
+
       emptyValue = { value = {}; };
       getSubOptions = prefix: elemType.getSubOptions (prefix ++ ["<${placeholder}>"]);
       getSubModules = elemType.getSubModules;
@@ -1006,6 +1031,16 @@ rec {
             modules = [ { _module.args.name = last loc; } ] ++ allModules defs;
             prefix = loc;
           }).config;
+        checkAndMerge = loc: defs:
+          let
+            configuration = base.extendModules {
+              modules = [ { _module.args.name = last loc; } ] ++ allModules defs;
+              prefix = loc;
+            };
+          in {
+            value = configuration.config;
+            outOfBand = configuration;
+          };
         emptyValue = { value = {}; };
         getSubOptions = prefix: (base.extendModules
           { inherit prefix; }).options // optionalAttrs (freeformType != null) {
