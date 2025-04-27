@@ -1,6 +1,12 @@
 { lib }:
 
 rec {
+
+  /**
+    Functions for generating systemd command lines.
+   */
+  systemd = import ./cli/systemd/default.nix { inherit lib; };
+
   /**
     Automatically convert an attribute set to command-line options.
 
