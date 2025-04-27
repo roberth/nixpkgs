@@ -148,6 +148,8 @@ in
 
 runTests {
 
+  cli.systemd = import ../cli/systemd/tests.nix { inherit lib; };
+
   # CUSTOMIZATION
 
   testFunctionArgsMakeOverridable = {
