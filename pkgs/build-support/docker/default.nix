@@ -116,12 +116,7 @@ let
 
   examples = callPackage ./examples.nix {
     inherit
-      buildImage
-      buildLayeredImage
-      pullImage
-      shadowSetup
-      buildImageWithNixDb
-      streamNixShellImage
+      dockerTools
       ;
   };
 
