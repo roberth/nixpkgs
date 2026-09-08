@@ -996,15 +996,34 @@ in
 
       assertions =
         let
+          mapAttrsOfSubmodule =
+            f: opt:
+            assert opt.type.name == "attrsOf" || opt.type.name == "lazyAttrsOf";
+            assert opt.type.nestedTypes.elemType.name == "submodule";
+            mapAttrsToList (
+              name: attrMeta:
+              f name {
+                cfg = attrMeta.configuration.config;
+                opt = attrMeta.configuration.options;
+              }
+            ) opt.valueMeta.attrs;
+
           mapper =
-            name: cfg:
+            name:
+            { cfg, opt }:
             optional (cfg.networkNamespace != null && (cfg.privateNetwork || cfg.interfaces != [ ]))
               "containers.${name}.networkNamespace is mutally exclusive to containers.${name}.privateNetwork and containers.${name}.interfaces."
             ++
-              optional (cfg.config.nix.enable && cfg.config.nix.daemon.enable && !config.nix.daemon.enable)
+              optional
+                (
+                  opt.config.isDefined
+                  && cfg.config.nix.enable
+                  && cfg.config.nix.daemon.enable
+                  && !config.nix.daemon.enable
+                )
                 "${options.containers}.${strings.escapeNixIdentifier name} requires a Nix daemon but the host does not provided it, as option ${options.nix.daemon.enable} is disabled";
         in
-        mkMerge (mapAttrsToList mapper config.containers);
+        mkMerge (mapAttrsOfSubmodule mapper options.containers);
     }
 
     (mkIf (config.boot.enableContainers) (
