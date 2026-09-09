@@ -1602,7 +1602,7 @@ let
       f def;
 
   /**
-    Consume the `options` metadata of the submodules in `attrsOf submodule`.
+    Consume the `options` metadata of the submodules typed by `attrsOf submodule`.
 
     It also works with `lazyAttrsOf` and `attrsWith`.
 
